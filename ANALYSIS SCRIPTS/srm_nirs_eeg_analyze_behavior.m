@@ -6,7 +6,7 @@
 % Script to analyze behavioral sensitivity (d-prime) for SRM NIRS EEG 1
 
 %BehaviorTable = readtable('/home/ben/Documents/GitHub/SRM-NIRS-EEG/RESULTS DATA/SRM-NIRS-EEG Behavior Files/srm-nirs-eeg-1.xlsx','Format','auto');
-BehaviorTable = readtable('C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG Behavior Files\srm-nirs-eeg-1.xlsx','Format','auto');
+BehaviorTable = readtable('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG Behavior Files/srm-nirs-eeg-1.xlsx','Format','auto');
 
 subject_ID = char('NDARVX753BR6','NDARZD647HJ1','NDARBL382XK5','NDARGF569BF3','NDARBA306US5',...
                 'NDARFD284ZP3','NDARAS648DT4','NDARLM531OY3','NDARXL287BE1','NDARRF358KO3','NDARGT639XS6','NDARDC882NK4',...
@@ -65,6 +65,10 @@ all_maskers = {'m_speech__ild_0__itd_500__targ_r__control_0',...
 
 rt_fig = figure();
 
+num_removed_FA_windows= zeros(size(subject_ID,1),1);
+num_total_FA_windows = zeros(size(subject_ID,1),1);
+num_total_hit_windows = zeros(size(subject_ID,1),1);
+
 for isubject = 1:size(subject_ID,1) % For each subject...
     disp(subject_ID(isubject,:))
     clicks_not_counted = 0;
@@ -72,7 +76,7 @@ for isubject = 1:size(subject_ID,1) % For each subject...
 
     % Load the word times for this subject
     %WordTimesTable = readtable("/home/ben/Documents/GitHub/SRM-NIRS-EEG/RESULTS DATA/SRM-NIRS-EEG Behavior Files/srm-nirs-eeg-1__s_" + string(subject_ID(isubject,:)) + "__Word_Times.csv");
-    WordTimesTable = readtable("C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG Behavior Files\srm-nirs-eeg-1__s_" + string(subject_ID(isubject,:)) + "__Word_Times.csv");
+    WordTimesTable = readtable("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG Behavior Files/srm-nirs-eeg-1__s_" + string(subject_ID(isubject,:)) + "__Word_Times.csv");
 
     run_count_per_condition = -1*ones(1,num_conditions); % array to keep track of which run in each condition we are on
 
@@ -141,8 +145,8 @@ for isubject = 1:size(subject_ID,1) % For each subject...
 %         
        %% Hit and False Alarm Windows
 
-       threshold_window_start = 0.3; %0.2
-       threshold_window_end =  1.4; % 1.5
+       threshold_window_start = 0.3; %0.3
+       threshold_window_end =  1.4; % 1.4
        tVec = 0:1/44100:16;
        hit_windows = zeros(1,length(tVec)); % create an empty array to define hit windows
        lead_hit_windows = zeros(1,length(tVec));
@@ -156,7 +160,8 @@ for isubject = 1:size(subject_ID,1) % For each subject...
         for i = 1:length(this_trial_target_color_times) % for each of the current target color times...
             [~,start_index_hit_window] = min(abs(tVec - (this_trial_target_color_times(i)+threshold_window_start))); % ...the hit window will start threshold_window_start seconds after the word onset
             [~,end_index_hit_window] = min(abs(tVec - (this_trial_target_color_times(i)+threshold_window_end))); % ...the hit window will end threshold_window_end seconds after the word onset
-
+            
+            num_total_hit_windows(isubject) = num_total_hit_windows(isubject) + 1;
             hit_windows(start_index_hit_window:end_index_hit_window) = 1; % a value of 1 in the vector hit_windows indicate an area where, if a click falls, it will be counted as a hit
              all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
             if target_color_lead(i) == 0 % then target LAGs on this color word
@@ -171,9 +176,13 @@ for isubject = 1:size(subject_ID,1) % For each subject...
         for i = 1:length(this_trial_masker_color_times) % for each of the current masker times...
             [~,start_index_FA_window] = min(abs(tVec - (this_trial_masker_color_times(i)+threshold_window_start))); % ...the false alarm window will start threshold_window_start seconds after the word onset
             [~,end_index_FA_window] = min(abs(tVec - (this_trial_masker_color_times(i)+threshold_window_end))); % ...the false alarm window will end threshold_window_end seconds after the word onset
-
+            
+            num_total_FA_windows(isubject) = num_total_FA_windows(isubject) + 1;
             if any(hit_windows(start_index_FA_window:end_index_FA_window) == 1)
-                continue
+                num_removed_FA_windows(isubject) = num_removed_FA_windows(isubject) + 1;
+                hit_windows(start_index_FA_window:end_index_FA_window) = 0;% throw out the hit window
+
+                continue % throw out the FA window
             else
                 FA_windows(start_index_FA_window:end_index_FA_window) = 1;
                 all_num_FA_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_FA_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
@@ -522,34 +531,34 @@ lead_d_primes_collapsed = norminv(all_lead_hit_rates_collapsed) - norminv(all_le
 lag_d_primes_collapsed = norminv(all_lag_hit_rates_collapsed) - norminv(all_lag_FA_rates_collapsed);
 
 %% Save data
-save('C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Behavior_Results.mat','d_primes_speech_masker','d_primes_collapsed','all_hit_rates_collapsed','all_FA_rates_collapsed', 'all_object_rates_collapsed','lead_d_primes_collapsed','lag_d_primes_collapsed','all_lead_hit_rates_collapsed','all_lead_FA_rates_collapsed','all_lag_hit_rates_collapsed','all_lag_FA_rates_collapsed')
+save('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Behavior_Results.mat','d_primes_speech_masker','d_primes_collapsed','all_hit_rates_collapsed','all_FA_rates_collapsed', 'all_object_rates_collapsed','lead_d_primes_collapsed','lag_d_primes_collapsed','all_lead_hit_rates_collapsed','all_lead_FA_rates_collapsed','all_lag_hit_rates_collapsed','all_lag_FA_rates_collapsed')
 
 hit_rate_table = array2table(all_hit_rates_collapsed);
-writetable(rows2vars(hit_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Hit_Rates.csv')
+writetable(rows2vars(hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Hit_Rates.csv')
 
 FA_rate_table = array2table(all_FA_rates_collapsed(5:end,:));
-writetable(rows2vars(FA_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_FA_Rates.csv')
+writetable(rows2vars(FA_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_FA_Rates.csv')
 
 object_rate_table = array2table(all_object_rates_collapsed);
-writetable(rows2vars(object_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_object_Rates.csv')
+writetable(rows2vars(object_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_object_Rates.csv')
 
 d_prime_table = array2table(d_primes_collapsed(5:end,:));
-writetable(rows2vars(d_prime_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_d_primes.csv')
+writetable(rows2vars(d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_d_primes.csv')
 
 lead_hit_rate_table = array2table(all_lead_hit_rates_collapsed);
-writetable(rows2vars(lead_hit_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lead_Hit_Rates.csv')
+writetable(rows2vars(lead_hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Hit_Rates_THROWBOTHWINDOWSOUT.csv')
 
 lag_hit_rate_table = array2table(all_lag_hit_rates_collapsed);
-writetable(rows2vars(lag_hit_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lag_Hit_Rates.csv')
+writetable(rows2vars(lag_hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Hit_Rates_THROWBOTHWINDOWSOUT.csv')
 
 lead_FA_rate_table = array2table(all_lead_FA_rates_collapsed(5:end,:));
-writetable(rows2vars(lead_FA_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lead_FA_Rates.csv')
+writetable(rows2vars(lead_FA_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_FA_Rates_THROWBOTHWINDOWSOUT.csv')
 
 lag_FA_rate_table = array2table(all_lag_FA_rates_collapsed(5:end,:));
-writetable(rows2vars(lag_FA_rate_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lag_FA_Rates.csv')
+writetable(rows2vars(lag_FA_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_FA_Rates_THROWBOTHWINDOWSOUT.csv')
 
 lead_d_prime_table = array2table(lead_d_primes_collapsed(5:end,:));
-writetable(rows2vars(lead_d_prime_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lead_d_primes.csv')
+writetable(rows2vars(lead_d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_d_primes_THROWBOTHWINDOWSOUT.csv')
 
 lag_d_prime_table = array2table(lag_d_primes_collapsed(5:end,:));
-writetable(rows2vars(lag_d_prime_table),'C:\Users\benri\Documents\GitHub\SRM-NIRS-EEG\RESULTS DATA\SRM-NIRS-EEG-1_Lag_d_primes.csv')
+writetable(rows2vars(lag_d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_d_primes_THROWBOTHWINDOWSOUT.csv')

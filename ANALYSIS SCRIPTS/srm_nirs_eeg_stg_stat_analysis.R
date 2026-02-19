@@ -11,15 +11,15 @@ library(gridExtra)
 
 # Data Preparation ####
 # Load in Data
-attend_right_speech_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_right_speech_masker.csv")
-attend_left_speech_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_left_speech_masker.csv")
-attend_right_noise_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_right_noise_masker.csv")
-attend_left_noise_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_left_noise_masker.csv")
+attend_right_speech_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_right_speech_masker.csv")
+attend_left_speech_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_left_speech_masker.csv")
+attend_right_noise_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_right_noise_masker.csv")
+attend_left_noise_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_left_noise_masker.csv")
 
-attend_right_speech_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_right_speech_masker_hbr.csv")
-attend_left_speech_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_left_speech_masker_hbr.csv")
-attend_right_noise_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_right_noise_masker_hbr.csv")
-attend_left_noise_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\Broadband-ILD-fNIRS\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_lateralization_target_left_noise_masker_hbr.csv")
+attend_right_speech_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_right_speech_masker_hbr.csv")
+attend_left_speech_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_left_speech_masker_hbr.csv")
+attend_right_noise_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_right_noise_masker_hbr.csv")
+attend_left_noise_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_lateralization_target_left_noise_masker_hbr.csv")
 
 colnames(attend_right_speech_data_hbo) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
 colnames(attend_right_noise_data_hbo) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
@@ -106,6 +106,12 @@ to.factor <- c('S', 'Roi', 'Hemisphere', 'Masker', 'Attend', 'Spatialization')
 all_data[, to.factor] <- lapply(all_data[, to.factor], as.factor)
 
 all_data_cleaned <- na.omit(all_data)
+
+all_data_cleaned$Spatialization <- factor(
+  all_data_cleaned$Spatialization,
+  levels = c("ITD50", "ITD500", "ILD70n", "ILD10")
+)
+
 
 # Check for normality, remove outliers
 #shapiro.test(all_data_cleaned$MeanHb)
@@ -216,62 +222,355 @@ pairs(EMM_stg_noise, simple = "Hemisphere", adjust = "bonferroni")
 # STG Plot ####
 stg_se_data_speechhbo <- summarySE(all_data_cleaned_stg_speechhbo, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_speechhbo <- summarySE(stg_se_data_speechhbo, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
-plotspeechhbo <- ggplot(stg_se_data_speechhbo, aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Hemisphere)) + 
-  scale_shape_manual(values = c("Contralateral"=24, "Ipsilateral" = 22)) +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5), color="red", fill="red") + 
+pd <- position_dodge(width = 0.6)
+
+plotspeechhbo <- ggplot() +
+  
+  # --- Violin of subject means ---
+  geom_violin(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_speechhbo,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        fill = Hemisphere,
+        group = interaction(Hemisphere, Spatialization)),
+    position = pd,
+    trim = FALSE,
+    alpha = 0.1,
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_speechhbo,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    color = "black",
+    size = 2,
+    stroke = 0.3,
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.6
+    ),
+    alpha = 0.3
+  ) +
+  
+  # --- Error bars (group mean ± SE) ---
+  geom_errorbar(
+    data = stg_se_data_speechhbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se,
+        group = Hemisphere),
+    width = 0.5,
+    linewidth = 0.8,
+    position = pd
+  ) +
+  
+  # --- Mean symbols ---
+  geom_point(
+    data = stg_se_data_speechhbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    size = 4,
+    position = pd
+  ) +
+  
+  scale_shape_manual(values = c("Contralateral" = 24,
+                                "Ipsilateral" = 22)) +
+  
+  scale_fill_manual(values = c("Contralateral" = "red",
+                               "Ipsilateral" = "darkred")) +
+  
   ggtitle("Speech Masker") +
-  labs(x="",y="Mean \u0394HbO (\u03BCM)") +
-  ylim(0,0.12) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) +
+  labs(x = "", y = "Mean \u0394HbO (\u03BCM)") +
+  ylim(-0.375,0.5) +
   theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  theme(legend.position="none")
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) + 
+  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = ""))
+  
+
+
 
 stg_se_data_noisehbo <- summarySE(all_data_cleaned_stg_noisehbo, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_noisehbo <- summarySE(stg_se_data_noisehbo, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
-plotnoisehbo <- ggplot(stg_se_data_noisehbo, aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape  = Hemisphere)) + 
-  scale_shape_manual(values = c("Contralateral"=24, "Ipsilateral" = 22)) +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5), color="red", fill="red") + 
+plotnoisehbo <- ggplot() +
+  # --- Violin of subject means ---
+  geom_violin(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_noisehbo,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        fill = Hemisphere,
+        group = interaction(Hemisphere, Spatialization)),
+    position = pd,
+    trim = FALSE,
+    alpha = 0.1,
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_noisehbo,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    color = "black",
+    size = 2,
+    stroke = 0.3,
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.6
+    ),
+    alpha = 0.3
+  ) +
+  
+  # --- Error bars (group mean ± SE) ---
+  geom_errorbar(
+    data = stg_se_data_noisehbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se,
+        group = Hemisphere),
+    width = 0.5,
+    linewidth = 0.8,
+    position = pd
+  ) +
+  
+  # --- Mean symbols ---
+  geom_point(
+    data = stg_se_data_noisehbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    size = 4,
+    position = pd
+  ) +
+  
+  scale_shape_manual(values = c("Contralateral" = 24,
+                                "Ipsilateral" = 22)) +
+  
+  scale_fill_manual(values = c("Contralateral" = "red",
+                               "Ipsilateral" = "darkred")) +
+  
   ggtitle("Noise Masker") +
-  labs(x="",y="") +
-  ylim(0,0.12) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) + 
-  theme_bw() + 
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  theme(legend.position="none")
+  labs(x = "", y = "") +
+  ylim(-0.375,0.5) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) + 
+  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = ""))
+
+  
 
 
 stg_se_data_speechhbr <- summarySE(all_data_cleaned_stg_speechhbr, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_speechhbr <- summarySE(stg_se_data_speechhbr, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
 
-plotspeechhbr <- ggplot(stg_se_data_speechhbr, aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Hemisphere)) + 
-  scale_shape_manual(values = c("Contralateral"=24, "Ipsilateral" = 22)) +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5), color="blue", fill="blue") + 
-  labs(x="",y="Mean \u0394HbR (\u03BCM)") +
-  ylim(-0.025,0.005) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) +
+plotspeechhbr <- ggplot() +
+  
+  # --- Violin of subject means ---
+  geom_violin(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_speechhbr,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        fill = Hemisphere,
+        group = interaction(Hemisphere, Spatialization)),
+    position = pd,
+    trim = FALSE,
+    alpha = 0.1,
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_speechhbr,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    color = "black",
+    size = 2,
+    stroke = 0.3,
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.6
+    ),
+    alpha = 0.3
+  ) +
+  
+  # --- Error bars (group mean ± SE) ---
+  geom_errorbar(
+    data = stg_se_data_speechhbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se,
+        group = Hemisphere),
+    width = 0.5,
+    linewidth = 0.8,
+    position = pd
+  ) +
+  
+  # --- Mean symbols ---
+  geom_point(
+    data = stg_se_data_speechhbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    size = 4,
+    position = pd
+  ) +
+  
+  scale_shape_manual(values = c("Contralateral" = 24,
+                                "Ipsilateral" = 22)) +
+  
+  scale_fill_manual(values = c("Contralateral" = "blue",
+                               "Ipsilateral" = "darkblue")) +
+  
+  labs(x = "", y = "Mean \u0394HbO (\u03BCM)") +
+  ylim(-0.25,0.15) +
   theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  theme(legend.position="none")
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD"))
+  
+
 
 stg_se_data_noisehbr <- summarySE(all_data_cleaned_stg_noisehbr, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_noisehbr <- summarySE(stg_se_data_noisehbr, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
 
 
-plotnoisehbr <- ggplot(stg_se_data_noisehbr, aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape  = Hemisphere)) + 
-  scale_shape_manual(values = c("Contralateral"=24, "Ipsilateral" = 22)) +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5), color="blue", fill="blue") + 
-  labs(x="",y="") +
-  ylim(-0.025,0.005) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) + 
-  theme_bw() + 
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  theme(legend.position="none")
+plotnoisehbr <- ggplot() +
+  
+  # --- Violin of subject means ---
+  geom_violin(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_noisehbr,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        fill = Hemisphere,
+        group = interaction(Hemisphere, Spatialization)),
+    position = pd,
+    trim = FALSE,
+    alpha = 0.1,
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Hemisphere + Spatialization,
+      data = all_data_cleaned_stg_noisehbr,
+      FUN = mean
+    ),
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    color = "black",
+    size = 2,
+    stroke = 0.3,
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.6
+    ),
+    alpha = 0.3
+  ) +
+  
+  # --- Error bars (group mean ± SE) ---
+  geom_errorbar(
+    data = stg_se_data_noisehbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se,
+        group = Hemisphere),
+    width = 0.5,
+    linewidth = 0.8,
+    position = pd
+  ) +
+  
+  # --- Mean symbols ---
+  geom_point(
+    data = stg_se_data_noisehbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        shape = Hemisphere,
+        fill = Hemisphere),
+    size = 4,
+    position = pd
+  ) +
+  
+  scale_shape_manual(values = c("Contralateral" = 24,
+                                "Ipsilateral" = 22)) +
+  
+  scale_fill_manual(values = c("Contralateral" = "blue",
+                               "Ipsilateral" = "darkblue")) +
+  
+  labs(x = "", y = "") +
+  ylim(-0.25,0.15) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) + 
+  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD"))
 
 
-grid.arrange(plotspeechhbo, plotnoisehbo, plotspeechhbr, plotnoisehbr, ncol=2,  widths = c(1,1), heights = c(4,2))
+plot_mean_hb_stg_raw <- grid.arrange(plotspeechhbo, plotnoisehbo, plotspeechhbr, plotnoisehbr, ncol=2,  widths = c(1,1), heights = c(4,2))
+ggsave("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/PAPER FIGURES/mean_hb_stg_raw.svg", plot = plot_mean_hb_stg_raw, width = 10, height = 8, units = "in")
 

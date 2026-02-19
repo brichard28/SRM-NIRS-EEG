@@ -9,8 +9,8 @@ require(gridExtra)
 
 #### Data Preparation HBO ###########
 # Load in Data
-speech_masker_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_speech_masker.csv")
-noise_masker_data_hbo <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_noise_masker.csv")
+speech_masker_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_speech_masker.csv")
+noise_masker_data_hbo <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_noise_masker.csv")
 
 colnames(speech_masker_data_hbo) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
 colnames(noise_masker_data_hbo) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
@@ -40,6 +40,11 @@ all_data_hbo[, to.factor] <- lapply(all_data_hbo[, to.factor], as.factor)
 
 all_data_hbo$Masker <- as.factor(all_data_hbo$Masker)
 all_data_cleaned_hbo <- na.omit(all_data_hbo)
+all_data_cleaned_hbo$Spatialization <- factor(
+  all_data_cleaned_hbo$Spatialization,
+  levels = c("ITD50", "ITD500", "ILD70n", "ILD10")
+)
+
 
 all_data_cleaned_hbo %>% group_by(Spatialization, Masker,Roi) %>% shapiro_test(MeanHb)
 all_data_cleaned_pfc_speech_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_pfc","left_pfc") & Masker == "speech")
@@ -49,8 +54,8 @@ all_data_cleaned_stg_noise_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right
 
 #### Data Preparaion HBR #####
 # Load in Data
-speech_masker_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_speech_masker_hbr.csv")
-noise_masker_data_hbr <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\ANALYSIS SCRIPTS\\Eli Analysis\\all_subjects_mean_during_stim_noise_masker_hbr.csv")
+speech_masker_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_speech_masker_hbr.csv")
+noise_masker_data_hbr <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/ANALYSIS SCRIPTS/Eli Analysis/all_subjects_mean_during_stim_noise_masker_hbr.csv")
 
 colnames(speech_masker_data_hbr) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
 colnames(noise_masker_data_hbr) <- c("S","Channel","ITD50","ITD500","ILD70n","ILD10")
@@ -80,6 +85,10 @@ all_data_hbr[, to.factor] <- lapply(all_data_hbr[, to.factor], as.factor)
 
 all_data_hbr$Masker <- as.factor(all_data_hbr$Masker)
 all_data_cleaned_hbr <- na.omit(all_data_hbr)
+all_data_cleaned_hbr$Spatialization <- factor(
+  all_data_cleaned_hbr$Spatialization,
+  levels = c("ITD50", "ITD500", "ILD70n", "ILD10")
+)
 
 all_data_cleaned_hbr %>% group_by(Spatialization, Masker,Roi) %>% shapiro_test(MeanHb)
 all_data_cleaned_pfc_speech_hbr <- subset(all_data_cleaned_hbr, Roi %in% c("right_pfc","left_pfc") & Masker == "speech")
@@ -141,160 +150,279 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 }
 
 
-# Check for normality, remove outliers
+# Check for normality
 all_data_cleaned_hbo %>% group_by(Spatialization, Masker,Roi) %>% shapiro_test(MeanHb)
 
 
 
+
 ##### PFC Plot HbO ##########
+pfc_se_data_speechhbo <- summarySE(
+  all_data_cleaned_pfc_speech_hbo,
+  measurevar = "MeanHb",
+  groupvars = c("S","Spatialization"),
+  na.rm = TRUE)
 
-# Speech HbO
-pfc_se_data_speech_all <- summarySE(all_data_pfc_speech, measurevar="MeanHb", groupvars=c("S","Masker","Spatialization","chromophore"), na.rm = TRUE)
-pfc_se_data_speech_all <- summarySE(pfc_se_data_speech_all, measurevar="MeanHb", groupvars=c("Masker","Spatialization","chromophore"), na.rm = TRUE)
+pfc_se_data_speechhbo <- summarySE(
+  pfc_se_data_speechhbo,
+  measurevar = "MeanHb",
+  groupvars = c("Spatialization"),
+  na.rm = TRUE)
 
-plotspeechhbo <- ggplot(subset(pfc_se_data_speech_all, chromophore == "HbO"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "red")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "red") +
-  scale_color_manual(values = "red") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
+
+plotspeechhbo <- ggplot() +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Spatialization,
+      data = all_data_cleaned_pfc_speech_hbo,
+      FUN = mean),
+    aes(x = Spatialization,
+        y = MeanHb),
+    color = "red",
+    size = 2,
+    alpha = 0.3,
+    position = position_jitter(width = 0.08)
+  ) +
+  
+  # --- Error bars ---
+  geom_errorbar(
+    data = pfc_se_data_speechhbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se),
+    width = 0.5,
+    linewidth = 0.8
+  ) +
+  
+  # --- Mean point ---
+  geom_point(
+    data = pfc_se_data_speechhbo,
+    aes(x = Spatialization,
+        y = MeanHb),
+    size = 4,
+    shape = 21,
+    fill = "red"
+  ) +
+  
   ggtitle("Speech Masker") +
-  labs(x="",y="Mean \u0394HbO (\u03BCM)") + # 
-  ylim(0,0.125) +
+  labs(x = "", y = "Mean \u0394HbO (\u03BCM)") +
+  ylim(-0.25,0.4) +
   theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) +
-  theme(legend.position="none") +
-  geom_signif(comparisons = list(c("ITD50","ITD500")), y_position = 0.09, tip_length = 0, color="black", annotation = c("***"), textsize = 5) +
-  geom_signif(comparisons = list(c("ITD50","ILD70n")), y_position = 0.10, tip_length = 0, color="black", annotation = c("***"), textsize = 5) +
-  geom_signif(comparisons = list(c("ITD50","ILD10")), y_position = 0.11, tip_length = 0, color="black", annotation = c("***"), textsize = 5)
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "",
+                            "ILD70n" = "", "ILD10" = ""))
 
-# Noise HbO
 
-pfc_se_data_noise_all <- summarySE(all_data_pfc_noise, measurevar="MeanHb", groupvars=c("S","Masker","Spatialization","chromophore"), na.rm = TRUE)
-pfc_se_data_noise_all <- summarySE(pfc_se_data_noise_all, measurevar="MeanHb", groupvars=c("Masker","Spatialization","chromophore"), na.rm = TRUE)
+# Noise HbO 
+pfc_se_data_noisehbo <- summarySE(
+  all_data_cleaned_pfc_noise_hbo,
+  measurevar="MeanHb",
+  groupvars=c("S","Spatialization"),
+  na.rm=TRUE)
 
-plotnoisehbo <- ggplot(subset(pfc_se_data_noise_all, chromophore == "HbO"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "red")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "red") +
-  scale_color_manual(values = "red") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
+pfc_se_data_noisehbo <- summarySE(
+  pfc_se_data_noisehbo,
+  measurevar="MeanHb",
+  groupvars=c("Spatialization"),
+  na.rm=TRUE)
+
+
+plotnoisehbo <- ggplot() +
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Spatialization,
+      data = all_data_cleaned_pfc_noise_hbo,
+      FUN = mean),
+    aes(x = Spatialization, y = MeanHb),
+    color = "red",
+    size = 2,
+    alpha = 0.3,
+    position = position_jitter(width = 0.08)
+  ) +
+  geom_errorbar(
+    data = pfc_se_data_noisehbo,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se),
+    width = 0.5,
+    linewidth = 0.8
+  ) +
+  geom_point(
+    data = pfc_se_data_noisehbo,
+    aes(x = Spatialization, y = MeanHb),
+    size = 4,
+    shape = 21,
+    fill = "red"
+  ) +
   ggtitle("Noise Masker") +
-  labs(x="",y="") +
-  ylim(0,0.125) +
+  labs(x = "", y = "Mean \u0394HbO (\u03BCM)") +
+  ylim(-0.25,0.4) +
   theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) +
-  theme(legend.position="none")
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "",
+                            "ILD70n" = "", "ILD10" = ""))
 
-
-##### PFC Plot HbR ##########
 
 # Speech HbR
-plotspeechhbr <- ggplot(subset(pfc_se_data_speech_all, chromophore == "HbR"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "blue")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "blue") +
-  scale_color_manual(values = "blue") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  labs(x="",y="Mean \u0394HbR (\u03BCM)") + #
-  ylim(-0.025,0.005) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) +
-  theme(legend.position="none")
-# Noise HbR
-plotnoisehbr <- ggplot(subset(pfc_se_data_noise_all, chromophore == "HbR"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "blue")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "blue") +
-  scale_color_manual(values = "blue") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  labs(x="",y="") +
-  ylim(-0.025,0.005) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) +
-  theme(legend.position="none")
-
-grid.arrange(plotspeechhbo,plotnoisehbo, plotspeechhbr,plotnoisehbr, ncol=2, widths = c(1,0.9), heights = c(4,2))
-
-
-
-
-
-
-##### STG Plot HbO ##########
-
-# Speech HbO
-stg_se_data_speech_all <- summarySE(all_data_stg_speech, measurevar="MeanHb", groupvars=c("S","Masker","Spatialization","chromophore"), na.rm = TRUE)
-stg_se_data_speech_all <- summarySE(stg_se_data_speech_all, measurevar="MeanHb", groupvars=c("Masker","Spatialization","chromophore"), na.rm = TRUE)
-
-plotspeechhbo <- ggplot(subset(stg_se_data_speech_all, chromophore == "HbO"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "red")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "red") +
-  scale_color_manual(values = "red") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  ggtitle("Speech Masker STG") +
-  labs(x="",y="Mean \u0394HbO (\u03BCM)") + # 
-  ylim(0,0.12) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) +
-  theme(legend.position="none")
-  
-  # Noise HbO
-  
-  stg_se_data_noise_all <- summarySE(all_data_stg_noise, measurevar="MeanHb", groupvars=c("S","Masker","Spatialization","chromophore"), na.rm = TRUE)
-stg_se_data_noise_all <- summarySE(stg_se_data_noise_all, measurevar="MeanHb", groupvars=c("Masker","Spatialization","chromophore"), na.rm = TRUE)
-
-plotnoisehbo <- ggplot(subset(stg_se_data_noise_all, chromophore == "HbO"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "red")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "red") +
-  scale_color_manual(values = "red") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  ggtitle("Noise Masker STG") +
-  labs(x="",y="") +
-  ylim(0,0.12) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  scale_x_discrete(labels=c("ITD50" = "", "ITD500" = "","ILD70n" = "","ILD10" = "")) +
-  theme(legend.position="none")
-
-
-##### STG Plot HbR ##########
-
 # Speech HbR
-plotspeechhbr <- ggplot(subset(stg_se_data_speech_all, chromophore == "HbR"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "blue")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "blue") +
-  scale_color_manual(values = "blue") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  labs(x="",y="Mean \u0394HbR (\u03BCM)") + #
-  ylim(-0.025,0) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_text(size=12)) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) +
-  theme(legend.position="none")
-# Noise HbR
-plotnoisehbr <- ggplot(subset(stg_se_data_noise_all, chromophore == "HbR"), aes(x=factor(Spatialization, level=c('ITD50', 'ITD500', 'ILD70n', 'ILD10')), y=MeanHb, shape = Spatialization, fill = "blue")) + 
-  scale_shape_manual(values = c("ITD50"=21, "ITD500" = 21, "ILD70n" = 21, "ILD10" = 21)) +
-  scale_fill_manual(values = "blue") +
-  scale_color_manual(values = "blue") +
-  geom_errorbar(aes(ymin=MeanHb-se, ymax=MeanHb+se), width=.1, position=position_dodge(width=0.5)) +
-  geom_point(aes(),size = 4, position=position_dodge(width=0.5)) +
-  labs(x="",y="") +
-  ylim(-0.025,0) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 18), axis.title=element_text(size=18), axis.text.x= element_text(size=12), axis.text.y= element_blank()) +
-  scale_x_discrete(labels=c("ITD50" = "Small\nITD", "ITD500" = "Large\nITD","ILD70n" = "Natural\nILD","ILD10" = "Broadband\nILD")) +
-  theme(legend.position="none")
+pfc_se_data_speechhbr <- summarySE(
+  all_data_cleaned_pfc_speech_hbr,
+  measurevar = "MeanHb",
+  groupvars = c("S","Spatialization"),
+  na.rm = TRUE)
 
-grid.arrange(plotspeechhbo,plotnoisehbo, plotspeechhbr,plotnoisehbr, ncol=2, widths = c(1,0.9), heights = c(4,2))
+pfc_se_data_speechhbr <- summarySE(
+  pfc_se_data_speechhbr,
+  measurevar = "MeanHb",
+  groupvars = c("Spatialization"),
+  na.rm = TRUE)
+
+
+plotspeechhbr <- ggplot() +
+
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Spatialization,
+      data = all_data_cleaned_pfc_speech_hbr,
+      FUN = mean),
+    aes(x = Spatialization,
+        y = MeanHb),
+    color = "blue",
+    size = 2,
+    alpha = 0.3,
+    position = position_jitter(width = 0.08)
+  ) +
+  
+  # --- Error bars ---
+  geom_errorbar(
+    data = pfc_se_data_speechhbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se),
+    width = 0.5,
+    linewidth = 0.8
+  ) +
+  
+  # --- Mean point ---
+  geom_point(
+    data = pfc_se_data_speechhbr,
+    aes(x = Spatialization,
+        y = MeanHb),
+    size = 4,
+    shape = 21,
+    fill = "blue"
+  ) +
+  labs(x = "", y = "Mean \u0394HbR (\u03BCM)") +
+  ylim(-0.2,0.1) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels=c("ITD50" = "Small\nITD",
+                            "ITD500" = "Large\nITD",
+                            "ILD70n" = "Natural\nILD",
+                            "ILD10" = "Broadband\nILD"))
+
+# Noise HbR
+# Noise HbR
+pfc_se_data_noisehbr <- summarySE(
+  all_data_cleaned_pfc_noise_hbr,
+  measurevar = "MeanHb",
+  groupvars = c("S","Spatialization"),
+  na.rm = TRUE)
+
+pfc_se_data_noisehbr <- summarySE(
+  pfc_se_data_noisehbr,
+  measurevar = "MeanHb",
+  groupvars = c("Spatialization"),
+  na.rm = TRUE)
+
+
+plotnoisehbr <- ggplot() +
+  
+  # --- Individual subject means ---
+  geom_point(
+    data = aggregate(
+      MeanHb ~ S + Spatialization,
+      data = all_data_cleaned_pfc_noise_hbr,
+      FUN = mean),
+    aes(x = Spatialization,
+        y = MeanHb),
+    color = "blue",
+    size = 2,
+    alpha = 0.3,
+    position = position_jitter(width = 0.08)
+  ) +
+  
+  # --- Error bars ---
+  geom_errorbar(
+    data = pfc_se_data_noisehbr,
+    aes(x = Spatialization,
+        y = MeanHb,
+        ymin = MeanHb - se,
+        ymax = MeanHb + se),
+    width = 0.5,
+    linewidth = 0.8
+  ) +
+  
+  # --- Mean point ---
+  geom_point(
+    data = pfc_se_data_noisehbr,
+    aes(x = Spatialization,
+        y = MeanHb),
+    size = 4,
+    shape = 21,
+    fill = "blue"
+  ) +
+  
+  labs(x = "", y = "Mean \u0394HbR (\u03BCM)") +
+  ylim(-0.2,0.1) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels=c("ITD50" = "Small\nITD",
+                            "ITD500" = "Large\nITD",
+                            "ILD70n" = "Natural\nILD",
+                            "ILD10" = "Broadband\nILD"))
+
+
+plot_mean_hb_pfc_raw <- grid.arrange(plotspeechhbo, plotnoisehbo, plotspeechhbr, plotnoisehbr, ncol=2,  widths = c(1,1), heights = c(4,2))
+ggsave("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/PAPER FIGURES/mean_hb_pfc_raw.svg", plot = plot_mean_hb_pfc_raw, width = 10, height = 8, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -448,6 +576,11 @@ model_stg_noise_hbr <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
                              data= all_data_cleaned_stg_noise_hbr, 
                              control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
 model_stg_noise_hbr
+
+
+
+
+
 
 
 

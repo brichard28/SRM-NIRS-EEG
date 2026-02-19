@@ -51,8 +51,8 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 ##    Hit Rates    ##
 ####################################################
 
-lead_hit_rates <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lead_Hit_Rates.csv")
-lag_hit_rates  <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lag_Hit_Rates.csv")
+lead_hit_rates <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Hit_Rates_SHORTWINDOW.csv")
+lag_hit_rates  <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Hit_Rates_SHORTWINDOW.csv")
 
 
 
@@ -189,8 +189,8 @@ summary(posthoc_hitrate_ild10_noise)
 ##    FA Rates    ##
 ####################################################
 
-lead_FA_rates <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lead_FA_Rates.csv")
-lag_FA_rates <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lag_FA_Rates.csv")
+lead_FA_rates <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_FA_Rates_SHORTWINDOW.csv")
+lag_FA_rates <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_FA_Rates_SHORTWINDOW.csv")
 
 # Remove unneeded columns, put in long format
 lead_FA_rates$OriginalVariableNames <- array(0:29)
@@ -285,8 +285,8 @@ summary(posthoc_farate_ild10_lag)
 ##    D primes    ##
 ####################################################
 
-lead_d_primes <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lead_d_primes.csv")
-lag_d_primes <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_Lag_d_primes.csv")
+lead_d_primes <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_d_primes_SHORTWINDOW.csv")
+lag_d_primes <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_d_primes_SHORTWINDOW.csv")
 
 # Remove unneeded columns, put in long format
 lead_d_primes$OriginalVariableNames <- array(0:29)
@@ -362,7 +362,7 @@ summary(posthoc_dprime_ild10)
 ##    Object Rates    ##
 ####################################################
 # 
-object_rates <- read.csv("C:\\Users\\benri\\Documents\\GitHub\\SRM-NIRS-EEG\\RESULTS DATA\\SRM-NIRS-EEG-1_object_Rates.csv")
+object_rates <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_object_Rates.csv")
 
 # Remove unneeded columns, put in long format
 object_rates$OriginalVariableNames <- array(1:30)

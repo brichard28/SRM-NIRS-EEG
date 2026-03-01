@@ -49,8 +49,9 @@ all_data_cleaned_hbo$Spatialization <- factor(
 all_data_cleaned_hbo %>% group_by(Spatialization, Masker,Roi) %>% shapiro_test(MeanHb)
 all_data_cleaned_pfc_speech_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_pfc","left_pfc") & Masker == "speech")
 all_data_cleaned_pfc_noise_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_pfc","left_pfc") & Masker == "noise")
-all_data_cleaned_stg_speech_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_stg","left_stg") & Masker == "speech")
-all_data_cleaned_stg_noise_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_stg","left_stg") & Masker == "noise")
+
+all_data_cleaned_pfc_hbo <- subset(all_data_cleaned_hbo, Roi %in% c("right_pfc","left_pfc"))
+
 
 #### Data Preparaion HBR #####
 # Load in Data
@@ -96,6 +97,7 @@ all_data_cleaned_pfc_noise_hbr <- subset(all_data_cleaned_hbr, Roi %in% c("right
 all_data_cleaned_stg_speech_hbr <- subset(all_data_cleaned_hbr, Roi %in% c("right_stg","left_stg") & Masker == "speech")
 all_data_cleaned_stg_noise_hbr <- subset(all_data_cleaned_hbr, Roi %in% c("right_stg","left_stg") & Masker == "noise")
 
+all_data_cleaned_pfc_hbr <- subset(all_data_cleaned_hbr, Roi %in% c("right_pfc","left_pfc"))
 
 ##### Combining Data #####
 all_data_cleaned_hbo$chromophore <- "HbO"
@@ -152,6 +154,14 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 
 # Check for normality
 all_data_cleaned_hbo %>% group_by(Spatialization, Masker,Roi) %>% shapiro_test(MeanHb)
+
+
+
+
+
+
+
+
 
 
 
@@ -505,48 +515,7 @@ pfc_noise_lmer_ild10 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
 #summary(pfc_lmer_noise_ild10)
 
 
-# STG, Speech Masker Model #
-model_stg_speech_hbo <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                              data= all_data_cleaned_stg_speech_hbo, 
-                              control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-model_stg_speech_hbo
 
-# Pairwise Comparisons (treatment coding)
-
-# ITD50 as reference
-all_data_cleaned_stg_speech_hbo$Spatialization <- relevel(all_data_cleaned_stg_speech_hbo$Spatialization, "ITD50")
-stg_speech_lmer_itd50 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                              data= all_data_cleaned_stg_speech_hbo,
-                              control = lmerControl(optimizer = "bobyqa"))#
-#summary(stg_speech_lmer_itd50)
-
-# ITD500 as reference
-all_data_cleaned_stg_speech_hbo$Spatialization <- relevel(all_data_cleaned_stg_speech_hbo$Spatialization, "ITD500")
-stg_speech_lmer_itd500 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                               data= all_data_cleaned_stg_speech_hbo,
-                               control = lmerControl(optimizer = "bobyqa"))#
-#summary(stg_speech_lmer_itd500)
-
-# ILD70n as reference
-all_data_cleaned_stg_speech_hbo$Spatialization <- relevel(all_data_cleaned_stg_speech_hbo$Spatialization, "ILD70n")
-stg_speech_lmer_ild70n <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                               data= all_data_cleaned_stg_speech_hbo,
-                               control = lmerControl(optimizer = "bobyqa"))#
-#summary(stg_speech_lmer_ild70n)
-
-# ILD10 as reference
-all_data_cleaned_stg_speech_hbo$Spatialization <- relevel(all_data_cleaned_stg_speech_hbo$Spatialization, "ILD10")
-stg_speech_lmer_ild10 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                              data= all_data_cleaned_stg_speech_hbo,
-                              control = lmerControl(optimizer = "bobyqa"))#
-#summary(stg_speech_lmer_ild10)
-
-
-# STG, Noise Masker Model #
-model_stg_noise_hbo <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                             data= all_data_cleaned_stg_noise_hbo, 
-                             control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-model_stg_noise_hbo
 
 
 
@@ -565,22 +534,51 @@ model_pfc_noise_hbr <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
                              control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
 model_pfc_noise_hbr
 
-# STG Speech
-model_stg_speech_hbr <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                              data= all_data_cleaned_stg_speech_hbr, 
+
+
+
+
+
+# IF DOING BOTH SPEECH AND NOISE TOGETHER
+model_pfc_hbo <- mixed(MeanHb ~ Spatialization*Masker + (1|S) + (1|Channel),
+                       data= all_data_cleaned_pfc_hbo, 
+                       control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
+model_pfc_hbo
+
+# Post-hoc rotations
+# ITD50
+all_data_cleaned_pfc_hbo$Spatialization <- relevel(all_data_cleaned_pfc_hbo$Spatialization, "ITD50")
+pfc_lmer_itd50 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
+                             data= all_data_cleaned_pfc_hbo,
+                             control = lmerControl(optimizer = "bobyqa"))
+summary(pfc_lmer_itd50)
+
+# ITD500
+all_data_cleaned_pfc_hbo$Spatialization <- relevel(all_data_cleaned_pfc_hbo$Spatialization, "ITD500")
+pfc_lmer_itd500 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
+                       data= all_data_cleaned_pfc_hbo,
+                       control = lmerControl(optimizer = "bobyqa"))
+summary(pfc_lmer_itd500)
+
+# ILD70n
+all_data_cleaned_pfc_hbo$Spatialization <- relevel(all_data_cleaned_pfc_hbo$Spatialization, "ILD70n")
+pfc_lmer_ild70n <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
+                        data= all_data_cleaned_pfc_hbo,
+                        control = lmerControl(optimizer = "bobyqa"))
+summary(pfc_lmer_ild70n)
+
+# ILD10
+all_data_cleaned_pfc_hbo$Spatialization <- relevel(all_data_cleaned_pfc_hbo$Spatialization, "ILD10")
+pfc_lmer_ild10 <- lmer(MeanHb ~ Spatialization + (1|S) + (1|Channel),
+                        data= all_data_cleaned_pfc_hbo,
+                        control = lmerControl(optimizer = "bobyqa"))
+summary(pfc_lmer_ild10)
+
+
+
+
+model_pfc_hbr <- mixed(MeanHb ~ Spatialization*Masker + (1|S) + (1|Channel),
+                              data= all_data_cleaned_pfc_hbr, 
                               control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-model_stg_speech_hbr
-
-# STG Noise
-model_stg_noise_hbr <- mixed(MeanHb ~ Spatialization + (1|S) + (1|Channel),
-                             data= all_data_cleaned_stg_noise_hbr, 
-                             control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-model_stg_noise_hbr
-
-
-
-
-
-
-
+model_pfc_hbr
 

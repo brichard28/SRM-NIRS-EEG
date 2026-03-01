@@ -155,35 +155,6 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 }
 
 
-
-
-# PFC, Speech Masker Model ####
-
-all_data_cleaned_pfc_speechhbo <-  subset(all_data_cleaned, chromophore == "HbO" & Roi == "pfc" & Masker == "speech")
-all_data_cleaned_pfc_speechhbr <-  subset(all_data_cleaned, chromophore == "HbR" & Roi == "pfc" & Masker == "speech")
-
-
-z2_pfc_speech <- mixed(MeanHb ~ Spatialization*Hemisphere + (1|S) + (1|Channel),
-                data= all_data_cleaned_pfc_speechhbo, 
-                control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-
-z2_pfc_speech
-
-# Significant effect of spatialization, which we knew
-
-# PFC, Noise Masker Model ####
-
-all_data_cleaned_pfc_noisehbo <-  subset(all_data_cleaned,chromophore == "HbO" & Roi == "pfc" & Masker == "noise")
-all_data_cleaned_pfc_noisehbo <-  subset(all_data_cleaned,chromophore == "HbR" & Roi == "pfc" & Masker == "noise")
-
-z2_pfc_noise <- mixed(MeanHb ~ Spatialization*Hemisphere + (1|S) + (1|Channel),
-                       data= all_data_cleaned_pfc_noisehbo, 
-                       control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
-
-z2_pfc_noise
-
-# No effects
-
 # STG, Speech Masker Model ####
 
 all_data_cleaned_stg_speechhbo <-  subset(all_data_cleaned, chromophore == "HbO" &  Roi == "stg" & Masker == "speech")
@@ -219,30 +190,54 @@ EMM_stg_noise <- emmeans(z2_stg_noise, ~ Spatialization * Hemisphere)
 pairs(EMM_stg_noise, simple = "Spatialization", adjust = "bonferroni")
 pairs(EMM_stg_noise, simple = "Hemisphere", adjust = "bonferroni")
 
+
+
+
+# IF INCLUDING BOTH SPEECH AND NOISE
+# HbO
+all_data_cleaned_stg_hbo <- subset(all_data_cleaned, chromophore == "HbO" &  Roi == "stg")
+model_stg_hbo <- mixed(MeanHb ~ Spatialization*Hemisphere*Masker + (1|S) + (1|Channel), data = all_data_cleaned_stg_hbo, control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
+
+all_data_cleaned_stg_hbo$Hemisphere <- relevel(all_data_cleaned_stg_hbo$Hemisphere, "Contralateral")
+posthoc_stg_itd50_hbo <- lmer(MeanHb ~ Hemisphere + (1|S) + (1|Channel),
+                                  data= subset(all_data_cleaned_stg_hbo, Spatialization == "ITD50"), 
+                                  control = lmerControl(optimizer = "bobyqa"))
+
+summary(posthoc_stg_itd50_hbo)
+
+
+posthoc_stg_itd500_hbo <- lmer(MeanHb ~ Hemisphere + (1|S) + (1|Channel),
+                              data= subset(all_data_cleaned_stg_hbo, Spatialization == "ITD500"), 
+                              control = lmerControl(optimizer = "bobyqa"))
+
+summary(posthoc_stg_itd500_hbo)
+
+
+posthoc_stg_ild70n_hbo <- lmer(MeanHb ~ Hemisphere + (1|S) + (1|Channel),
+                               data= subset(all_data_cleaned_stg_hbo, Spatialization == "ILD70n"), 
+                               control = lmerControl(optimizer = "bobyqa"))
+
+summary(posthoc_stg_ild70n_hbo)
+
+posthoc_stg_ild10_hbo <- lmer(MeanHb ~ Hemisphere + (1|S) + (1|Channel),
+                               data= subset(all_data_cleaned_stg_hbo, Spatialization == "ILD10"), 
+                               control = lmerControl(optimizer = "bobyqa"))
+
+summary(posthoc_stg_ild10_hbo)
+
+# HbR
+all_data_cleaned_stg_hbr <- subset(all_data_cleaned, chromophore == "HbR" &  Roi == "stg")
+model_stg_hbr <- mixed(MeanHb ~ Spatialization*Hemisphere*Masker + (1|S) + (1|Channel), data = all_data_cleaned_stg_hbr, control = lmerControl(optimizer = "bobyqa"), method = 'LRT')
+
+
+
+
 # STG Plot ####
 stg_se_data_speechhbo <- summarySE(all_data_cleaned_stg_speechhbo, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_speechhbo <- summarySE(stg_se_data_speechhbo, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
 pd <- position_dodge(width = 0.6)
 
 plotspeechhbo <- ggplot() +
-  
-  # --- Violin of subject means ---
-  geom_violin(
-    data = aggregate(
-      MeanHb ~ S + Hemisphere + Spatialization,
-      data = all_data_cleaned_stg_speechhbo,
-      FUN = mean
-    ),
-    aes(x = Spatialization,
-        y = MeanHb,
-        fill = Hemisphere,
-        group = interaction(Hemisphere, Spatialization)),
-    position = pd,
-    trim = FALSE,
-    alpha = 0.1,
-    width = 0.6,
-    linewidth = 0.3
-  ) +
   
   # --- Individual subject means ---
   geom_point(
@@ -313,24 +308,6 @@ plotspeechhbo <- ggplot() +
 stg_se_data_noisehbo <- summarySE(all_data_cleaned_stg_noisehbo, measurevar="MeanHb", groupvars=c("S","Hemisphere","Spatialization"), na.rm = TRUE)
 stg_se_data_noisehbo <- summarySE(stg_se_data_noisehbo, measurevar="MeanHb", groupvars=c("Hemisphere","Spatialization"), na.rm = TRUE)
 plotnoisehbo <- ggplot() +
-  # --- Violin of subject means ---
-  geom_violin(
-    data = aggregate(
-      MeanHb ~ S + Hemisphere + Spatialization,
-      data = all_data_cleaned_stg_noisehbo,
-      FUN = mean
-    ),
-    aes(x = Spatialization,
-        y = MeanHb,
-        fill = Hemisphere,
-        group = interaction(Hemisphere, Spatialization)),
-    position = pd,
-    trim = FALSE,
-    alpha = 0.1,
-    width = 0.6,
-    linewidth = 0.3
-  ) +
-  
   # --- Individual subject means ---
   geom_point(
     data = aggregate(
@@ -402,24 +379,6 @@ stg_se_data_speechhbr <- summarySE(stg_se_data_speechhbr, measurevar="MeanHb", g
 
 plotspeechhbr <- ggplot() +
   
-  # --- Violin of subject means ---
-  geom_violin(
-    data = aggregate(
-      MeanHb ~ S + Hemisphere + Spatialization,
-      data = all_data_cleaned_stg_speechhbr,
-      FUN = mean
-    ),
-    aes(x = Spatialization,
-        y = MeanHb,
-        fill = Hemisphere,
-        group = interaction(Hemisphere, Spatialization)),
-    position = pd,
-    trim = FALSE,
-    alpha = 0.1,
-    width = 0.6,
-    linewidth = 0.3
-  ) +
-  
   # --- Individual subject means ---
   geom_point(
     data = aggregate(
@@ -489,24 +448,6 @@ stg_se_data_noisehbr <- summarySE(stg_se_data_noisehbr, measurevar="MeanHb", gro
 
 
 plotnoisehbr <- ggplot() +
-  
-  # --- Violin of subject means ---
-  geom_violin(
-    data = aggregate(
-      MeanHb ~ S + Hemisphere + Spatialization,
-      data = all_data_cleaned_stg_noisehbr,
-      FUN = mean
-    ),
-    aes(x = Spatialization,
-        y = MeanHb,
-        fill = Hemisphere,
-        group = interaction(Hemisphere, Spatialization)),
-    position = pd,
-    trim = FALSE,
-    alpha = 0.1,
-    width = 0.6,
-    linewidth = 0.3
-  ) +
   
   # --- Individual subject means ---
   geom_point(

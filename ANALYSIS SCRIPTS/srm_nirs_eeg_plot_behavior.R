@@ -1,14 +1,15 @@
+rm(list = ls())
+library(tidyverse)
+library(patchwork)
 library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(gridExtra)
 
-# --- Load your data ---
-# Assuming you've saved CSVs from MATLAB as described
-lead_hit <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Hit_Rates_THROWBOTHWINDOWSOUT.csv", row.names = 1)
-lag_hit  <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Hit_Rates_THROWBOTHWINDOWSOUT.csv", row.names = 1)
-lead_FA  <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_FA_Rates_THROWBOTHWINDOWSOUT.csv", row.names = 1)
-lag_FA   <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_FA_Rates_THROWBOTHWINDOWSOUT.csv", row.names = 1)
+# --- Load data ---
+lead_hit <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Hit_Rates_RANDOMLYCHOOSE.csv", row.names = 1)
+lag_hit  <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Hit_Rates_RANDOMLYCHOOSE.csv", row.names = 1)
+lead_FA  <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_FA_Rates_RANDOMLYCHOOSE.csv", row.names = 1)
+lag_FA   <- read.csv("/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_FA_Rates_RANDOMLYCHOOSE.csv", row.names = 1)
+lead_object <- read.csv('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Object_Rates_RANDOMLYCHOOSE.csv', row.names =1)
+lag_object <- read.csv('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Object_Rates_RANDOMLYCHOOSE.csv', row.names=1)
 
 lead_hit_noise <- lead_hit[,c(1,2,3,4)]
 lead_hit_speech <- lead_hit[,c(5,6,7,8)]
@@ -16,9 +17,14 @@ lead_hit_speech <- lead_hit[,c(5,6,7,8)]
 lag_hit_noise <- lag_hit[,c(1,2,3,4)]
 lag_hit_speech <- lag_hit[,c(5,6,7,8)]
 
-
 lead_FA_speech <- lead_FA
 lag_FA_speech <- lag_FA
+
+lead_object_noise <- lead_object[,c(1,2,3,4)]
+lead_object_speech <- lead_object[,c(5,6,7,8)]
+
+lag_object_noise <- lag_object[,c(1,2,3,4)]
+lag_object_speech <- lag_object[,c(5,6,7,8)]
 
 # Example for lead_hit_noise
 conditions <- c("Small\nITDs", "Large\nITDs", "Natural\nILDs", "Broadband\nILDs")
@@ -29,13 +35,14 @@ colnames(lead_hit_speech) <- conditions
 colnames(lag_hit_speech)  <- conditions
 colnames(lead_FA_speech) <- conditions
 colnames(lag_FA_speech)  <- conditions
+colnames(lead_object_noise) <- conditions
+colnames(lag_object_noise) <- conditions
+colnames(lead_object_speech) <- conditions
+colnames(lag_object_speech) <- conditions
+
 
 
 # --- Helper: convert to long format ---
-library(tidyr)
-library(dplyr)
-
-library(tidyverse)
 
 make_long_df <- function(lead_df, lag_df, masker) {
   
@@ -81,17 +88,20 @@ hit_speech_df <- make_long_df(lead_hit_speech, lag_hit_speech, "Speech")
 # FA rates
 FA_speech_df   <- make_long_df(lead_FA_speech, lag_FA_speech, "Speech")
 
+# Object rates
+object_noise_df <- make_long_df(lead_object_noise, lag_object_noise, "Noise")
+object_speech_df <- make_long_df(lead_object_speech, lag_object_speech, "Speech")
+
 # --- Helper: compute mean + SEM ---
 summarize_sem <- function(df) {
   df %>%
-    group_by(Condition, Type) %>%
-    summarise(
+    dplyr::group_by(Condition, Type) %>%
+    dplyr::summarise(
       Mean = mean(Rate, na.rm=TRUE),
-      SEM  = sd(Rate, na.rm=TRUE) / sqrt(length(Rate[!is.na(Rate)])),
+      SEM  = sd(Rate, na.rm=TRUE) / sqrt(sum(!is.na(Rate))),
       .groups="drop"
     )
 }
-
 # --- Plot function ---
 make_plot <- function(df, y_label, plot_title) {
   
@@ -107,26 +117,23 @@ make_plot <- function(df, y_label, plot_title) {
   
   # Summary stats: mean + SEM
   summary_df <- df %>%
-    group_by(Condition, Position) %>%
-    summarise(
+    dplyr::group_by(Condition, Position) %>%
+    dplyr::summarise(
       Mean = mean(Rate, na.rm = TRUE),
-      SEM  = sd(Rate, na.rm = TRUE)/sqrt(length(Rate[!is.na(Rate)])),
+      SEM  = sd(Rate, na.rm = TRUE)/sqrt(sum(!is.na(Rate))),
       .groups = "drop"
     )
   
   ggplot() +
-    # Violin of individual subjects
-    geom_violin(data = df, aes(x=Condition, y=Rate, fill=Position), 
-                position = pd, width=0.7, alpha=0.3, show.legend = FALSE) +
     # Individual subject points
     geom_point(data = df, aes(x=Condition, y=Rate, color=Position, shape=Position),
-               position = pd, size=5, alpha=0.5) +
+               position = pd, size=4, alpha=0.2) +
     # Mean + SEM
     geom_errorbar(data = summary_df, 
                   aes(x=Condition, ymin=Mean-SEM, ymax=Mean+SEM, group=Position), 
                   color="black", width=1.0, linewidth = 2.0, position=pd) +
     geom_point(data = summary_df, aes(x=Condition, y=Mean, color=Position, shape=Position),
-               position = pd, size=10) +
+               position = pd, size=6) +
     labs(x="", y="", title="") +
     ylim(0,1.0) + 
     theme_classic() +
@@ -139,11 +146,9 @@ make_plot <- function(df, y_label, plot_title) {
       legend.title = element_text(size = 14),
       legend.text  = element_text(size = 14)
     ) +
-    scale_fill_manual(values=c("Lead"="#0072B2", "Lag"="#d95f02")) +
     scale_color_manual(values=c("Lead"="#0072B2", "Lag"="#d95f02")) +
     scale_shape_manual(values=c("Lead"=16, "Lag"=17)) +
-    guides(fill = guide_legend(title="Position"),
-           color = guide_legend(title="Position"),
+    guides(color = guide_legend(title="Position"),
            shape = guide_legend(title="Position"))
 }
 
@@ -171,7 +176,7 @@ behavior_plot <- (p1 | p3) / (p2 | p4)  # 2x2 layout
 
 # Save as SVG
 ggsave(
-  filename = "/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/PAPER FIGURES/behavior_raw_throwbothwindows_out.svg",
+  filename = "/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/PAPER FIGURES/behavior_raw.svg",
   plot = behavior_plot,
   width = 20,
   height = 14,
@@ -180,3 +185,20 @@ ggsave(
 )
 
 behavior_plot
+
+
+## Plot object rates
+p1 <- make_plot(object_speech_df, "Speech Masker", "Object Rate")
+p2 <- make_plot(object_noise_df, "Noise Masker", "Object Rate")
+object_plot <- (p1 | p2)
+ggsave(
+  filename = "/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/PAPER FIGURES/object_raw.svg",
+  plot = behavior_plot,
+  width = 20,
+  height = 14,
+  units = "in",
+  device = "svg"
+)
+
+object_plot
+

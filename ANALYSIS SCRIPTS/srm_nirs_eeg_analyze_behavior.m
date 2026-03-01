@@ -9,12 +9,12 @@
 BehaviorTable = readtable('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG Behavior Files/srm-nirs-eeg-1.xlsx','Format','auto');
 
 subject_ID = char('NDARVX753BR6','NDARZD647HJ1','NDARBL382XK5','NDARGF569BF3','NDARBA306US5',...
-                'NDARFD284ZP3','NDARAS648DT4','NDARLM531OY3','NDARXL287BE1','NDARRF358KO3','NDARGT639XS6','NDARDC882NK4',...
-                'NDARWB491KR3','NDARNL224RR9','NDARTT639AB1','NDARAZC45TW3',...
-                'NDARNS784LM2','NDARLB144ZM4','NDARTP382XC8',...
-                'NDARLJ581GD7','NDARGS283RM9','NDARRED356WS','NDARHUG535MO',...
-                'NDARFIN244AL','NDARKAI888JU','NDARBAA679HA','NDARUXL573SS',...
-                'NDARMOL966PB','NDARGHM426BL','NDARSEW256ZA'); %
+    'NDARFD284ZP3','NDARAS648DT4','NDARLM531OY3','NDARXL287BE1','NDARRF358KO3','NDARGT639XS6','NDARDC882NK4',...
+    'NDARWB491KR3','NDARNL224RR9','NDARTT639AB1','NDARAZC45TW3',...
+    'NDARNS784LM2','NDARLB144ZM4','NDARTP382XC8',...
+    'NDARLJ581GD7','NDARGS283RM9','NDARRED356WS','NDARHUG535MO',...
+    'NDARFIN244AL','NDARKAI888JU','NDARBAA679HA','NDARUXL573SS',...
+    'NDARMOL966PB','NDARGHM426BL','NDARSEW256ZA'); %
 num_conditions = 20;
 %,
 all_hits = zeros(size(subject_ID,1),num_conditions);
@@ -26,42 +26,51 @@ all_lead_FAs = zeros(size(subject_ID,1),num_conditions);
 all_lag_FAs = zeros(size(subject_ID,1),num_conditions);
 
 all_objects = zeros(size(subject_ID,1),num_conditions);
+all_lead_objects = zeros(size(subject_ID,1),num_conditions);
+all_lag_objects = zeros(size(subject_ID,1),num_conditions);
+
+
 all_num_target_color_words = zeros(size(subject_ID,1),num_conditions);
 all_num_masker_color_words = zeros(size(subject_ID,1),num_conditions);
 all_num_target_object_words = zeros(size(subject_ID,1),num_conditions);
+all_num_masker_object_words = zeros(size(subject_ID,1),num_conditions);
 
 all_num_lead_target_color = zeros(size(subject_ID,1),num_conditions);
-all_num_lead_masker_color = zeros(size(subject_ID,1),num_conditions);
-
 all_num_lag_target_color = zeros(size(subject_ID,1),num_conditions);
+
+all_num_lead_masker_color = zeros(size(subject_ID,1),num_conditions);
 all_num_lag_masker_color = zeros(size(subject_ID,1),num_conditions);
 
+all_num_lead_target_object = zeros(size(subject_ID,1),num_conditions);
+all_num_lag_target_object = zeros(size(subject_ID,1),num_conditions);
 
+all_num_lead_masker_object = zeros(size(subject_ID,1),num_conditions);
+all_num_lag_masker_object = zeros(size(subject_ID,1),num_conditions);
 
 all_num_hit_windows =  zeros(size(subject_ID,1),num_conditions);
 all_num_object_windows =  zeros(size(subject_ID,1),num_conditions);
 all_num_FA_windows =  zeros(size(subject_ID,1),num_conditions);
 
 all_maskers = {'m_speech__ild_0__itd_500__targ_r__control_0',...
-'m_noise__ild_0__itd_50__targ_l__control_0',...
-'m_noise__ild_0__itd_50__targ_r__control_0',...
-'m_speech__ild_70n__itd_0__targ_r__control_0',...
-'m_speech__ild_0__itd_50__targ_l__control_0',...
-'m_speech__ild_10__itd_0__targ_l__control_0',...
-'m_speech__ild_0__itd_500__targ_l__control_0',...
-'m_speech__ild_0__itd_500__targ_l__control_1',...
-'m_noise__ild_0__itd_500__targ_r__control_1',...
-'m_noise__ild_0__itd_500__targ_r__control_0',...
-'m_noise__ild_70n__itd_0__targ_l__control_0',...
-'m_noise__ild_10__itd_0__targ_l__control_0',...
-'m_speech__ild_10__itd_0__targ_r__control_0',...
-'m_noise__ild_10__itd_0__targ_r__control_0',...
-'m_speech__ild_0__itd_50__targ_r__control_0',...
-'m_speech__ild_0__itd_500__targ_r__control_1',...
-'m_noise__ild_70n__itd_0__targ_r__control_0',...
-'m_noise__ild_0__itd_500__targ_l__control_1',...
-'m_noise__ild_0__itd_500__targ_l__control_0',...
-'m_speech__ild_70n__itd_0__targ_l__control_0'}; % we will maintain this order throughout
+    'm_noise__ild_0__itd_50__targ_l__control_0',...
+    'm_noise__ild_0__itd_50__targ_r__control_0',...
+    'm_speech__ild_70n__itd_0__targ_r__control_0',...
+    'm_speech__ild_0__itd_50__targ_l__control_0',...
+    'm_speech__ild_10__itd_0__targ_l__control_0',...
+    'm_speech__ild_0__itd_500__targ_l__control_0',...
+    'm_speech__ild_0__itd_500__targ_l__control_1',...
+    'm_noise__ild_0__itd_500__targ_r__control_1',...
+    'm_noise__ild_0__itd_500__targ_r__control_0',...
+    'm_noise__ild_70n__itd_0__targ_l__control_0',...
+    'm_noise__ild_10__itd_0__targ_l__control_0',...
+    'm_speech__ild_10__itd_0__targ_r__control_0',...
+    'm_noise__ild_10__itd_0__targ_r__control_0',...
+    'm_speech__ild_0__itd_50__targ_r__control_0',...
+    'm_speech__ild_0__itd_500__targ_r__control_1',...
+    'm_noise__ild_70n__itd_0__targ_r__control_0',...
+    'm_noise__ild_0__itd_500__targ_l__control_1',...
+    'm_noise__ild_0__itd_500__targ_l__control_0',...
+    'm_speech__ild_70n__itd_0__targ_l__control_0'}; % we will maintain this order throughout
 
 rt_fig = figure();
 
@@ -120,50 +129,59 @@ for isubject = 1:size(subject_ID,1) % For each subject...
         target_color_lead = this_trial_whether_target_lead(ismember(this_trial_target_words,color_words)); % 0 when color lags (second position within pair), 1 when color leads (first position within pair)
         masker_color_lead = 1 - this_trial_whether_target_lead(ismember(this_trial_masker_words,color_words));
 
+        target_object_lead = this_trial_whether_target_lead(~ismember(this_trial_target_words,color_words));
+        masker_object_lead = this_trial_whether_target_lead(~ismember(this_trial_target_words,color_words));
 
         % Store number of color words in the target and masker
         all_num_target_color_words(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_target_color_words(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_target_words,color_words));
         all_num_masker_color_words(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_masker_color_words(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_masker_words,color_words));
         all_num_target_object_words(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_target_object_words(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_target_words,color_words));
-        
-        
+        all_num_masker_object_words(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_masker_object_words(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_masker_words,color_words));
+
+
         all_num_lead_target_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lead_target_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_target_words,color_words) & this_trial_whether_target_lead == 1);
+        all_num_lag_target_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lag_target_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_target_words,color_words) & this_trial_whether_target_lead == 0);
+
+        all_num_lead_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lead_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_masker_words,color_words) & this_trial_whether_target_lead == 0);
         all_num_lag_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lag_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_masker_words,color_words) & this_trial_whether_target_lead == 1);
 
-        all_num_lag_target_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lag_target_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_target_words,color_words) & this_trial_whether_target_lead == 0);
-        all_num_lead_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lead_masker_color(isubject,string(all_maskers) == string(this_trial_masker)) + sum(ismember(this_trial_masker_words,color_words) & this_trial_whether_target_lead == 0);
+        all_num_lead_target_object(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lead_target_object(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_target_words,color_words) & this_trial_whether_target_lead == 1);
+        all_num_lag_target_object(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lag_target_object(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_target_words,color_words) & this_trial_whether_target_lead == 0);
 
+        all_num_lead_masker_object(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lead_masker_object(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_masker_words,color_words) & this_trial_whether_target_lead == 0);
+        all_num_lag_masker_object(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_lag_masker_object(isubject,string(all_maskers) == string(this_trial_masker)) + sum(~ismember(this_trial_masker_words,color_words) & this_trial_whether_target_lead == 1);
 
         % Find just color times in target and masker
         this_trial_target_color_times = this_trial_target_times(ismember(this_trial_target_words,color_words));
         this_trial_target_object_times = this_trial_target_times(~ismember(this_trial_target_words,color_words));
         this_trial_masker_color_times = this_trial_masker_times(ismember(this_trial_masker_words,color_words));
+        this_trial_masker_object_times = this_trial_masker_times(~ismember(this_trial_masker_words,color_words));
 
-%         disp(["this_trial_condition = ", num2str(this_trial_condition)])
-%         disp(["this_trial_masker = ", this_trial_masker])
-%         disp(["this trial num masker color words = ", num2str(sum(ismember(this_trial_masker_words,color_words)))])
-%         
-       %% Hit and False Alarm Windows
 
-       threshold_window_start = 0.3; %0.3
-       threshold_window_end =  1.4; % 1.4
-       tVec = 0:1/44100:16;
-       hit_windows = zeros(1,length(tVec)); % create an empty array to define hit windows
-       lead_hit_windows = zeros(1,length(tVec));
+        %% Hit and False Alarm Windows
+
+        threshold_window_start = 0.3; %0.3
+        threshold_window_end =  1.4; % 1.4
+        tVec = 0:1/44100:16;
+        hit_windows = zeros(1,length(tVec)); % create an empty array to define hit windows
+        lead_hit_windows = zeros(1,length(tVec));
         lag_hit_windows = zeros(1,length(tVec));
-       FA_windows = zeros(1,length(tVec)); % create an empty array to define false alarm windows
-       object_windows = zeros(1,length(tVec));
-       lead_FA_windows = zeros(1,length(tVec));
+        FA_windows = zeros(1,length(tVec)); % create an empty array to define false alarm windows
+        lead_FA_windows = zeros(1,length(tVec));
         lag_FA_windows = zeros(1,length(tVec));
+
+        object_windows = zeros(1,length(tVec));
+        lead_object_windows = zeros(1,length(tVec));
+        lag_object_windows = zeros(1,length(tVec));
 
         % specify hit windows
         for i = 1:length(this_trial_target_color_times) % for each of the current target color times...
             [~,start_index_hit_window] = min(abs(tVec - (this_trial_target_color_times(i)+threshold_window_start))); % ...the hit window will start threshold_window_start seconds after the word onset
             [~,end_index_hit_window] = min(abs(tVec - (this_trial_target_color_times(i)+threshold_window_end))); % ...the hit window will end threshold_window_end seconds after the word onset
-            
+
             num_total_hit_windows(isubject) = num_total_hit_windows(isubject) + 1;
             hit_windows(start_index_hit_window:end_index_hit_window) = 1; % a value of 1 in the vector hit_windows indicate an area where, if a click falls, it will be counted as a hit
-             all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
+            all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_hit_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
             if target_color_lead(i) == 0 % then target LAGs on this color word
                 lag_hit_windows(start_index_hit_window:end_index_hit_window) = 1;
             elseif target_color_lead(i) == 1 % then target LEADS on this trial
@@ -176,13 +194,33 @@ for isubject = 1:size(subject_ID,1) % For each subject...
         for i = 1:length(this_trial_masker_color_times) % for each of the current masker times...
             [~,start_index_FA_window] = min(abs(tVec - (this_trial_masker_color_times(i)+threshold_window_start))); % ...the false alarm window will start threshold_window_start seconds after the word onset
             [~,end_index_FA_window] = min(abs(tVec - (this_trial_masker_color_times(i)+threshold_window_end))); % ...the false alarm window will end threshold_window_end seconds after the word onset
-            
+
             num_total_FA_windows(isubject) = num_total_FA_windows(isubject) + 1;
             if any(hit_windows(start_index_FA_window:end_index_FA_window) == 1)
                 num_removed_FA_windows(isubject) = num_removed_FA_windows(isubject) + 1;
-                hit_windows(start_index_FA_window:end_index_FA_window) = 0;% throw out the hit window
 
+                % If throwing out only the false alarm window
+                % continue
+
+                % If throwing out both
+                hit_windows(start_index_FA_window:end_index_FA_window) = 0;% throw out the hit window
                 continue % throw out the FA window
+
+                % If randomly choosing which to throw out
+                % random_bit = randi([0, 1]);
+                % if random_bit == 0 % throw out the hit window
+                %     hit_windows(start_index_FA_window:end_index_FA_window) = 0;
+                %     FA_windows(start_index_FA_window:end_index_FA_window) = 1;
+                % 
+                %     if masker_color_lead(i) == 0 % then masker LAGs on this trial
+                %         lag_FA_windows(start_index_FA_window:end_index_FA_window) = 1;
+                %     elseif masker_color_lead(i) == 1 % then masker LEADS on this trial
+                %         lead_FA_windows(start_index_FA_window:end_index_FA_window) = 1;
+                %     end
+                % 
+                % elseif random_bit == 1 % throw out the FA window
+                %     continue
+                % end
             else
                 FA_windows(start_index_FA_window:end_index_FA_window) = 1;
                 all_num_FA_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_FA_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
@@ -207,6 +245,13 @@ for isubject = 1:size(subject_ID,1) % For each subject...
                 continue
             elseif all(object_windows(start_index_object_window:end_index_object_window) == 0)
                 object_windows(start_index_object_window:end_index_object_window) = 1;
+                if target_object_lead(i) == 0 % then target LAGs on this trial
+                    lag_object_windows(start_index_object_window:end_index_object_window) = 1;
+                elseif target_object_lead(i) == 1 % then target LEADS on this trial
+                    lead_object_windows(start_index_object_window:end_index_object_window) = 1;
+                end
+                
+                
                 all_num_object_windows(isubject,string(all_maskers) == string(this_trial_masker)) = all_num_object_windows(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
             end
         end
@@ -217,13 +262,14 @@ for isubject = 1:size(subject_ID,1) % For each subject...
 
         test_vector(itrial,:,:) = FA_windows + hit_windows + object_windows;
 
-        % ...Calculate the hit rate, FA rate in this trial
+
+        % ...Calculate the hit, FA, object counts in this trial
         for iclick = 1:length(this_trial_click_times)
             [~,current_click_index] = min(abs(tVec - this_trial_click_times(iclick))); % ...find the time index of that click...
 
             if hit_windows(current_click_index) == 1 % ...if that click falls within a hit window...
                 all_hits(isubject,string(all_maskers) == string(this_trial_masker)) = all_hits(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
-                                % populate lead and lag
+                % populate lead and lag
                 if lead_hit_windows(current_click_index) == 1
                     all_lead_hits(isubject,string(all_maskers) == string(this_trial_masker)) = all_lead_hits(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
                 elseif lag_hit_windows(current_click_index) == 1
@@ -232,7 +278,7 @@ for isubject = 1:size(subject_ID,1) % For each subject...
 
             elseif FA_windows(current_click_index) == 1 %...otherwise if that click falls within a false alarm window...
                 all_FAs(isubject,string(all_maskers) == string(this_trial_masker)) = all_FAs(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
-                            % populate lead and lag
+                % populate lead and lag
                 if lead_FA_windows(current_click_index) == 1
                     all_lead_FAs(isubject,string(all_maskers) == string(this_trial_masker)) = all_lead_FAs(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
                 elseif lag_FA_windows(current_click_index) == 1
@@ -240,6 +286,11 @@ for isubject = 1:size(subject_ID,1) % For each subject...
                 end
             elseif object_windows(current_click_index) == 1
                 all_objects(isubject,string(all_maskers) == string(this_trial_masker)) = all_objects(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
+                if lead_object_windows(current_click_index) == 1
+                    all_lead_objects(isubject,string(all_maskers) == string(this_trial_masker)) = all_lead_objects(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
+                elseif lag_object_windows(current_click_index) == 1
+                    all_lag_objects(isubject,string(all_maskers) == string(this_trial_masker)) = all_lag_objects(isubject,string(all_maskers) == string(this_trial_masker)) + 1;
+                end
 
             else% ...if the click is not counted as either
                 clicks_not_counted = clicks_not_counted + 1;
@@ -269,7 +320,7 @@ for isubject = 1:size(subject_ID,1) % For each subject...
         end
 
 
-        
+
     end
 
     save(append(string(subject_ID(isubject,:)),'color_click_distances.mat'),'this_subject_color_click_distances');
@@ -291,6 +342,8 @@ for isubject = 1:size(subject_ID,1) % For each subject...
 end
 
 %% NEW ORDER = itd50 noise, itd500 noise, ildnat noise, ild10 noise, itd50 speech, itd500 speech, ildnat speech, ild10 speech
+
+% HITS
 all_hits_collapsed_left_and_right = [];
 all_hits_collapsed_left_and_right(1,:) = sum(all_hits(:,[2,3]),2); % itd50 noise
 all_hits_collapsed_left_and_right(2,:) = sum(all_hits(:,[10,19]),2); % itd500 noise
@@ -322,6 +375,7 @@ all_lag_hits_collapsed_left_and_right(7,:) = sum(all_lag_hits(:,[4,20]),2); % il
 all_lag_hits_collapsed_left_and_right(8,:) = sum(all_lag_hits(:,[6,13]),2); % ild10 speech
 
 
+% FAs
 all_FAs_collapsed_left_and_right = [];
 all_FAs_collapsed_left_and_right(1,:) = sum(all_FAs(:,[2,3]),2); % itd50 noise
 all_FAs_collapsed_left_and_right(2,:) = sum(all_FAs(:,[10,19]),2); % itd500 noise
@@ -352,6 +406,7 @@ all_lag_FAs_collapsed_left_and_right(6,:) = sum(all_lag_FAs(:,[1,7]),2); % itd50
 all_lag_FAs_collapsed_left_and_right(7,:) = sum(all_lag_FAs(:,[4,20]),2); % ildnat speech
 all_lag_FAs_collapsed_left_and_right(8,:) = sum(all_lag_FAs(:,[6,13]),2); % ild10 speech
 
+% Objects
 
 all_objects_collapsed_left_and_right = [];
 all_objects_collapsed_left_and_right(1,:) = sum(all_objects(:,[2,3]),2); % itd50 noise
@@ -362,6 +417,26 @@ all_objects_collapsed_left_and_right(5,:) = sum(all_objects(:,[5,15]),2); % itd5
 all_objects_collapsed_left_and_right(6,:) = sum(all_objects(:,[1,7]),2);% itd500 speech
 all_objects_collapsed_left_and_right(7,:) = sum(all_objects(:,[4,20]),2);% ildnat speech
 all_objects_collapsed_left_and_right(8,:) = sum(all_objects(:,[6,13]),2);% ild10 speech
+
+all_lead_objects_collapsed_left_and_right = [];
+all_lead_objects_collapsed_left_and_right(1,:) = sum(all_lead_objects(:,[2,3]),2); % itd50 noise
+all_lead_objects_collapsed_left_and_right(2,:) = sum(all_lead_objects(:,[10,19]),2); % itd500 noise
+all_lead_objects_collapsed_left_and_right(3,:) = sum(all_lead_objects(:,[11,17]),2); % ildnat noise
+all_lead_objects_collapsed_left_and_right(4,:) = sum(all_lead_objects(:,[12,14]),2); % ild10 noise
+all_lead_objects_collapsed_left_and_right(5,:) = sum(all_lead_objects(:,[5,15]),2); % itd50 speech
+all_lead_objects_collapsed_left_and_right(6,:) = sum(all_lead_objects(:,[1,7]),2); % itd500 speech
+all_lead_objects_collapsed_left_and_right(7,:) = sum(all_lead_objects(:,[4,20]),2); % ildnat speech
+all_lead_objects_collapsed_left_and_right(8,:) = sum(all_lead_objects(:,[6,13]),2); % ild10 speech
+
+all_lag_objects_collapsed_left_and_right = [];
+all_lag_objects_collapsed_left_and_right(1,:) = sum(all_lag_objects(:,[2,3]),2); % itd50 noise
+all_lag_objects_collapsed_left_and_right(2,:) = sum(all_lag_objects(:,[10,19]),2); % itd500 noise
+all_lag_objects_collapsed_left_and_right(3,:) = sum(all_lag_objects(:,[11,17]),2); % ildnat noise
+all_lag_objects_collapsed_left_and_right(4,:) = sum(all_lag_objects(:,[12,14]),2); % ild10 noise
+all_lag_objects_collapsed_left_and_right(5,:) = sum(all_lag_objects(:,[5,15]),2); % itd50 speech
+all_lag_objects_collapsed_left_and_right(6,:) = sum(all_lag_objects(:,[1,7]),2); % itd500 speech
+all_lag_objects_collapsed_left_and_right(7,:) = sum(all_lag_objects(:,[4,20]),2); % ildnat speech
+all_lag_objects_collapsed_left_and_right(8,:) = sum(all_lag_objects(:,[6,13]),2); % ild10 speech
 
 
 all_num_target_color_words_collapsed_left_and_right = [];
@@ -437,6 +512,29 @@ all_num_target_object_words_collapsed_left_and_right(5,:) = sum(all_num_target_o
 all_num_target_object_words_collapsed_left_and_right(6,:) = sum(all_num_target_object_words(:,[1,7]),2);% itd500 speech
 all_num_target_object_words_collapsed_left_and_right(7,:) = sum(all_num_target_object_words(:,[4,20]),2);% ildnat speech
 all_num_target_object_words_collapsed_left_and_right(8,:) = sum(all_num_target_object_words(:,[6,13]),2);% ild10 speech
+
+all_num_lead_target_object_words_collapsed_left_and_right = [];
+all_num_lead_target_object_words_collapsed_left_and_right(1,:) = sum(all_num_lead_target_object(:,[2,3]),2);% itd50 noise
+all_num_lead_target_object_words_collapsed_left_and_right(2,:) = sum(all_num_lead_target_object(:,[10,19]),2); % itd500 noise
+all_num_lead_target_object_words_collapsed_left_and_right(3,:) = sum(all_num_lead_target_object(:,[11,17]),2);% ildnat noise
+all_num_lead_target_object_words_collapsed_left_and_right(4,:) = sum(all_num_lead_target_object(:,[12,14]),2);% ild10 noise
+all_num_lead_target_object_words_collapsed_left_and_right(5,:) = sum(all_num_lead_target_object(:,[5,15]),2);% itd50 speech
+all_num_lead_target_object_words_collapsed_left_and_right(6,:) = sum(all_num_lead_target_object(:,[1,7]),2);% itd500 speech
+all_num_lead_target_object_words_collapsed_left_and_right(7,:) = sum(all_num_lead_target_object(:,[4,20]),2);% ildnat speech
+all_num_lead_target_object_words_collapsed_left_and_right(8,:) = sum(all_num_lead_target_object(:,[6,13]),2);% ild10 speech
+
+
+all_num_lag_target_object_words_collapsed_left_and_right = [];
+all_num_lag_target_object_words_collapsed_left_and_right(1,:) = sum(all_num_lag_target_object(:,[2,3]),2);% itd50 noise
+all_num_lag_target_object_words_collapsed_left_and_right(2,:) = sum(all_num_lag_target_object(:,[10,19]),2); % itd500 noise
+all_num_lag_target_object_words_collapsed_left_and_right(3,:) = sum(all_num_lag_target_object(:,[11,17]),2);% ildnat noise
+all_num_lag_target_object_words_collapsed_left_and_right(4,:) = sum(all_num_lag_target_object(:,[12,14]),2);% ild10 noise
+all_num_lag_target_object_words_collapsed_left_and_right(5,:) = sum(all_num_lag_target_object(:,[5,15]),2);% itd50 speech
+all_num_lag_target_object_words_collapsed_left_and_right(6,:) = sum(all_num_lag_target_object(:,[1,7]),2);% itd500 speech
+all_num_lag_target_object_words_collapsed_left_and_right(7,:) = sum(all_num_lag_target_object(:,[4,20]),2);% ildnat speech
+all_num_lag_target_object_words_collapsed_left_and_right(8,:) = sum(all_num_lag_target_object(:,[6,13]),2);% ild10 speech
+
+
 
 all_num_hit_windows_collapsed_left_and_right = [];
 all_num_hit_windows_collapsed_left_and_right(1,:) = sum(all_num_hit_windows(:,[2,3]),2);% itd50 noise
@@ -517,10 +615,18 @@ all_lag_FA_rates_collapsed(all_lag_FA_rates_collapsed >= 1) = 0.99;
 
 all_object_rates = all_objects./all_num_object_windows;
 all_object_rates_collapsed = all_objects_collapsed_left_and_right./all_num_object_windows_collapsed_left_and_right;
+all_lead_object_rates_collapsed = all_lead_objects_collapsed_left_and_right./all_num_lead_target_object_words_collapsed_left_and_right;
+all_lag_object_rates_collapsed = all_lag_objects_collapsed_left_and_right./all_num_lag_target_object_words_collapsed_left_and_right;
+
+
 all_object_rates(all_object_rates == 0) = 0.001;
 all_object_rates(all_object_rates >= 1) = 0.999;
 all_object_rates_collapsed(all_object_rates_collapsed == 0) = 0.01;
 all_object_rates_collapsed(all_object_rates_collapsed >= 1) = 0.99;
+all_lead_object_rates_collapsed(all_lead_object_rates_collapsed == 0) = 0.01;
+all_lead_object_rates_collapsed(all_lead_object_rates_collapsed >= 1) = 0.99;
+all_lag_object_rates_collapsed(all_lag_object_rates_collapsed == 0) = 0.01;
+all_lag_object_rates_collapsed(all_lag_object_rates_collapsed >= 1) = 0.99;
 
 %% D-prime calculation
 d_primes_all = norminv(all_hit_rates) - norminv(all_FA_rates);
@@ -531,19 +637,21 @@ lead_d_primes_collapsed = norminv(all_lead_hit_rates_collapsed) - norminv(all_le
 lag_d_primes_collapsed = norminv(all_lag_hit_rates_collapsed) - norminv(all_lag_FA_rates_collapsed);
 
 %% Save data
-save('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Behavior_Results.mat','d_primes_speech_masker','d_primes_collapsed','all_hit_rates_collapsed','all_FA_rates_collapsed', 'all_object_rates_collapsed','lead_d_primes_collapsed','lag_d_primes_collapsed','all_lead_hit_rates_collapsed','all_lead_FA_rates_collapsed','all_lag_hit_rates_collapsed','all_lag_FA_rates_collapsed')
+save('/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Behavior_Results_THROWBOTHWINDOWSOUT.mat','d_primes_speech_masker','d_primes_collapsed','all_hit_rates_collapsed',...
+    'all_FA_rates_collapsed', 'all_object_rates_collapsed','lead_d_primes_collapsed','lag_d_primes_collapsed','all_lead_hit_rates_collapsed',...
+    'all_lead_FA_rates_collapsed','all_lag_hit_rates_collapsed','all_lag_FA_rates_collapsed','all_lead_object_rates_collapsed','all_lag_object_rates_collapsed')
 
 hit_rate_table = array2table(all_hit_rates_collapsed);
-writetable(rows2vars(hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Hit_Rates.csv')
+writetable(rows2vars(hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Hit_Rates_THROWBOTHWINDOWSOUT.csv')
 
 FA_rate_table = array2table(all_FA_rates_collapsed(5:end,:));
-writetable(rows2vars(FA_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_FA_Rates.csv')
+writetable(rows2vars(FA_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_FA_Rates_THROWBOTHWINDOWSOUT.csv')
 
 object_rate_table = array2table(all_object_rates_collapsed);
-writetable(rows2vars(object_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_object_Rates.csv')
+writetable(rows2vars(object_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_object_Rates_THROWBOTHWINDOWSOUT.csv')
 
 d_prime_table = array2table(d_primes_collapsed(5:end,:));
-writetable(rows2vars(d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_d_primes.csv')
+writetable(rows2vars(d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_d_primes_THROWBOTHWINDOWSOUT.csv')
 
 lead_hit_rate_table = array2table(all_lead_hit_rates_collapsed);
 writetable(rows2vars(lead_hit_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Hit_Rates_THROWBOTHWINDOWSOUT.csv')
@@ -562,3 +670,10 @@ writetable(rows2vars(lead_d_prime_table),'/Users/benrichardson/Documents/GitHub/
 
 lag_d_prime_table = array2table(lag_d_primes_collapsed(5:end,:));
 writetable(rows2vars(lag_d_prime_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_d_primes_THROWBOTHWINDOWSOUT.csv')
+
+lead_object_rate_table = array2table(all_lead_object_rates_collapsed);
+writetable(rows2vars(lead_object_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lead_Object_Rates_THROWBOTHWINDOWSOUT.csv')
+
+
+lag_object_rate_table = array2table(all_lag_object_rates_collapsed);
+writetable(rows2vars(lag_object_rate_table),'/Users/benrichardson/Documents/GitHub/Broadband-ILD-fNIRS/RESULTS DATA/SRM-NIRS-EEG-1_Lag_Object_Rates_THROWBOTHWINDOWSOUT.csv')
